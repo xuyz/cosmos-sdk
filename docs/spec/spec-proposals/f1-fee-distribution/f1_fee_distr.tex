@@ -2,7 +2,7 @@
 \usepackage{hyperref}
 
 %opening
-\title{F1 Fee Distribution Draft-01}
+\title{F1 Fee Distribution Draft-02}
 \author{Dev Ojha}
 
 \begin{document}
@@ -158,7 +158,7 @@ $$\sum_{i = start(f)}^{end(f)}\left(\prod_{j = 0}^{i} 1 + x_j \right) \frac{R_i}
 
 Thus every block, each validator just has to add the total amount of fees (The $R_i$ term) that goes to delegates to some per-period term.
 When creating a new period, $n_{start(f)}$ can be cached in state, and the product is already stored in the previous periods state entry.
-You then get the next period's $n_{start(f)}$ from the current tm-power entry. 
+You then get the next period's $n_{start(f)}$ from the consensus' power entry for this validator. 
 This is thus extremely efficient per block.
 
 When withdrawing, you take the difference as before,
@@ -167,19 +167,15 @@ $(\prod_0^{begin\ bonding\ period}1 + x)$ is known, since its included in the st
 You then divide the entitled fees by $(\prod_0^{begin\ bonding\ period}1 + x)$ to normalize it to being the amount of rewards you're entitled to from 1 stake at that block to now.
 Then as before, you multiply by the amount of stake you had initially bonded.
 TODO: (Does the difference equating to that make sense, or should it be shown explicitly)
+TODO: Does this need to explain how the originally bonded tokens are refunded, or is that clear?
 
-Note that the inflation function could vary per block,
+The inflation function could vary per block,
 and per validator if ever a need rose. 
 If the inflation rate is the same for everyone then there can be a single global store for the entries corresponding to the product of inflations.
 Inflation creation can trivially be epoched as long as inflation isn't required within the epoch, through changes to the $inflation$ function.
 
-Again note that this process is extremely efficient.
-
 \subsection{Withdrawing with no iteration over slashes}
-TODO: Fill this out. 
-Core idea: you use the same mechanism as previously, but you just make that blocks $x_j$ term negative.
-(So a $20\%$ slash would be equivalent to an inflation on that validator of $-20\%$)
-This foregoes the constant inflation per validator, may or may not be worth it depending on expected number of slashes
+Notice that a slash is essentially the same as a negative inflation rate for a validator in one block. For example a $20\%$ slash is equivalent to a $-20\%$ inflation for a validator in one block. Given correctness of auto-bonding inflation, then handling slashes in an O(1) manner can be done by simply setting that validators inflation term in that block to be the negative of the slash rate.
 
 \subsection{Auto bonding fees}
 TODO: Fill this out. 
@@ -219,6 +215,7 @@ This seems ineffective to keep track of, thus it is not worth it.
 Each slash should instead remain in state until the validator unbonds and all delegators have their fees withdrawn.
 
 \section{Implementers Considerations}
+TODO: Remove this section?
 
 This is an extremely simple scheme with many nice benefits. 
 \begin{itemize}
@@ -230,6 +227,7 @@ This is an extremely simple scheme with many nice benefits.
 	\item The above two can change on a live chain with no issues.
 	\item Validator commission rates can be changed every block
 	\item The simplicity of this scheme lends itself well to implementation
+	\item auto unbonding 
 \end{itemize}
 
 Thus this scheme has efficiency improvements, simplicity improvements, and expressiveness improvements over the currently proposed schemes. With a correct fee distribution amongst the validator set, this solves the existing problem where one could withhold their signature for risk-free gain.
@@ -243,6 +241,9 @@ Thus this scheme has efficiency improvements, simplicity improvements, and expre
 	\item Remove iteration over slashes by the same normalization trick used in inflation
 	\item Add equation numbers
 	\item perhaps re-organize so that the no iteration
+	\item Section on decimal precision considerations (would unums help?)
+	\item Make it clear that you the withdraw action need not be a tx type and could instead happen 'transparently' if a chain desired this for UX
+	
 \end{itemize}
 
 
