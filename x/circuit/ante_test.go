@@ -11,6 +11,10 @@ import (
 
 type tx []sdk.Msg
 
+var _ sdk.Tx = tx{}
+
+func (tx tx) ValidateBasic() sdk.Error { return nil }
+
 func (tx tx) GetMsgs() []sdk.Msg { return tx }
 
 type msg struct{}
@@ -23,45 +27,33 @@ func (msg) GetSigners() []sdk.AccAddress { return nil }
 
 type msg1 struct{ msg }
 
-func (msg1) Type() string { return "msg" }
+var _ sdk.Msg = msg1{}
 
-func (msg1) Name() string { return "msg1" }
+func (msg1) Route() string { return "msg1" }
+
+func (msg1) Type() string { return "msg1" }
 
 type msg2 struct{ msg }
 
-func (msg2) Type() string { return "msg" }
+var _ sdk.Msg = msg2{}
 
-func (msg2) Name() string { return "msg2" }
+func (msg2) Route() string { return "msg2" }
 
-type othermsg struct{ msg }
+func (msg2) Type() string { return "msg2" }
 
-func (othermsg) Type() string { return "othermsg" }
-
-func (othermsg) Name() string { return "othermsg" }
-
-func testMsg(t *testing.T, ctx sdk.Context, k Keeper, msg sdk.Msg, ty bool, name bool) {
+func testMsg(t *testing.T, ctx sdk.Context, k Keeper, msg sdk.Msg, initial bool) {
 	ante := NewAnteHandler(k)
 
 	_, _, abort := ante(ctx, tx{msg}, false)
-	require.Equal(t, ty || name, abort)
+	require.Equal(t, initial, abort)
 
-	table := []struct {
-		ty   bool
-		name bool
-	}{
-		{false, false},
-		{false, true},
-		{true, false},
-		{true, true},
-	}
+	require.NotPanics(t, func() { k.space.SetWithSubkey(ctx, MsgRouteKey, []byte(msg.Type()), true) }, "panic setting breaker")
+	_, _, abort = ante(ctx, tx{msg}, false)
+	require.Equal(t, true, abort)
 
-	for i, tc := range table {
-		require.NotPanics(t, func() { k.space.SetWithSubkey(ctx, MsgTypeKey, []byte(msg.Type()), tc.ty) }, "panic setting breaker, tc #%d", i)
-		require.NotPanics(t, func() { k.space.SetWithSubkey(ctx, MsgNameKey, []byte(msg.Name()), tc.name) }, "panic setting breaker, tc #%d", i)
-
-		_, _, abort := ante(ctx, tx{msg}, false)
-		require.Equal(t, tc.ty || tc.name, abort)
-	}
+	require.NotPanics(t, func() { k.space.SetWithSubkey(ctx, MsgRouteKey, []byte(msg.Type()), false) }, "panic setting breaker")
+	_, _, abort = ante(ctx, tx{msg}, false)
+	require.Equal(t, false, abort)
 }
 
 func TestAnteHandler(t *testing.T) {
@@ -70,13 +62,11 @@ func TestAnteHandler(t *testing.T) {
 	k := NewKeeper(space)
 
 	data := GenesisState{
-		MsgTypes: []string{"othermsg"},
-		MsgNames: []string{"msg2"},
+		MsgRoutes: []string{"msg2"},
 	}
 
 	InitGenesis(ctx, k, data)
 
-	testMsg(t, ctx, k, msg1{}, false, false)
-	testMsg(t, ctx, k, msg2{}, false, true)
-	testMsg(t, ctx, k, othermsg{}, true, false)
+	testMsg(t, ctx, k, msg1{}, false)
+	testMsg(t, ctx, k, msg2{}, true)
 }
