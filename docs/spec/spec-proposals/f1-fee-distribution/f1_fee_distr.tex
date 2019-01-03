@@ -25,10 +25,8 @@ The trivial solution of just giving the rewards to each delegator every block is
 So instead fee distribution algorithms have delegators perform an explicit withdraw transaction, which when performed yields the same total amount of fees as if they had received them at every block. 
 
 This details F1, an approximation-free, slash-tolerant fee distribution algorithm which allows validator commission-rates, inflation rates, and fee proportions, which can all efficiently change per validator, every block.
-The algorithm requires iterating over the validators every block, and withdraws require iterating over all of the corresponding validator's slashes whilst the delegator was bonded.
+The algorithm requires iterating over the validators every block, and withdraws require no iteration.
 The former iteration is cheap, due to staking logic already requiring iteration over all validators, which causes the expensive state-reads to be cached.
-The number of slashes is expected to be 0 or 1 for most validators,
-so the latter term also meets the blockchain's efficiency needs.
 
 The key point of how F1 works is that it tracks how much rewards a delegator with 1 stake for a given validator would be entitled to if it had bonded at block 0 until the latest block.
 When a delegator bonds at block $b$, the amount of rewards a delegator with 1 stake would have if bonded at block 0 until block $b$ is also persisted to state.
@@ -98,17 +96,20 @@ More generally, each validator could have a function which takes their fees as i
 \label{ssec:slashing}
 Slashing is distinct from withdrawals, since it lowers the stake of all of the delegator's by a fixed percentage.
 Since no one is charged gas for slashes, a slash cannot iterate over all delegators.
-Thus we can no longer just multiply by $x$ over the difference in stake. 
+Thus we can no longer just multiply by $x$ over the difference in stake.
+This section describes a simple solution that should suffice for most chains needs. An asymptotically optimal solution is provided in section 2.4.
+
+
 The solution here is to instead store each period created by a slash in the validators state.
 Then when withdrawing, you must iterate over all slashes between when you started and ended.
-Suppose you delegated at period $0$, a y\% slash occured at period $2$, and your withdrawal is period $4$.
-Then you receive funds from $0$ to $2$ as normal.
-The equations for funds you receive for $2$ to $4$ now uses $(1 - y)x$ for your stake instead of just $x$ stake.
+Suppose you delegated at period $0$, a y\% slash occured at period $2$, and your withdrawal creates period $4$.
+Then you receive funds from periods $0$ to $2$ as normal.
+The equations for funds you receive for periods $2$ to $4$ now uses $(1 - y)x$ for your stake instead of just $x$ stake.
 When there are multiple slashes, you just account for the accumulated slash factor.
 
-In practice this will not really be an efficiency hit, as we can expect most validators to have no slashes.
-Validators that get slashed a lot will naturally lose their delegators.
-A malicious validator that gets itself slashed many times would increase the gas to withdraw linearly, but the economic loss of funds due to the slashes should far out-weigh the extra overhead the honest withdrawer must pay for due to the gas.
+In practice this will not really be an efficiency hit, as the number of slashes is expected to be 0 or 1 for most validators.
+Validators that get slashed more will naturally lose their delegators.
+A malicious validator that gets itself slashed many times would increase the gas to withdraw linearly, but the economic loss of funds due to the slashes is expected to far out-weigh the extra overhead the honest withdrawer must pay for due to the gas.
 
 \subsection{Inflation}
 Inflation is the idea that we want every staked coin to create more staking tokens as time progresses.
@@ -175,7 +176,10 @@ If the inflation rate is the same for everyone then there can be a single global
 Inflation creation can trivially be epoched as long as inflation isn't required within the epoch, through changes to the $inflation$ function.
 
 \subsection{Withdrawing with no iteration over slashes}
-Notice that a slash is essentially the same as a negative inflation rate for a validator in one block. For example a $20\%$ slash is equivalent to a $-20\%$ inflation for a validator in one block. Given correctness of auto-bonding inflation, then handling slashes in an O(1) manner can be done by simply setting that validators inflation term in that block to be the negative of the slash rate.
+Notice that a slash is essentially the same as a negative inflation rate for a validator in one block.
+For example a $20\%$ slash is equivalent to a $-20\%$ inflation for a validator in one block.
+Given correctness of auto-bonding inflation, then handling slashes in an O(1) manner can be done by simply setting that validators inflation term in that block to be the negative of the slash rate.
+This significantly simplifies the withdrawal procedure.
 
 \subsection{Auto bonding fees}
 TODO: Fill this out. 
@@ -236,14 +240,11 @@ Thus this scheme has efficiency improvements, simplicity improvements, and expre
 
 \begin{itemize}
 	\item A global fee pool can be described.
-	\item Determine if auto-bonding fees is compatible with inflation and comission rates in conjunction
-	\item mention storage optimization in the uniform inflation and iteration over slashing case: only have one storage location w/ refcount of the product of inflation results
-	\item Remove iteration over slashes by the same normalization trick used in inflation
+	\item Mention storage optimization for how to prune slashing entries in the uniform inflation and iteration over slashing case
 	\item Add equation numbers
 	\item perhaps re-organize so that the no iteration
-	\item Section on decimal precision considerations (would unums help?)
-	\item Make it clear that you the withdraw action need not be a tx type and could instead happen 'transparently' if a chain desired this for UX
-	
+	\item Section on decimal precision considerations (would unums help?), and mitigating error with floats and decimals.
+	\item Make it clear that the withdraw action need not be a tx type and could instead happen 'transparently' when more coins are needed, if a chain desired this for UX.
 \end{itemize}
 
 
