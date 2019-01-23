@@ -28,7 +28,7 @@ func NewProposer(proposalID uint64, proposer string) Proposer {
 }
 
 func (p Proposer) String() string {
-	return fmt.Sprintf("Proposal w/ ID %d was proposed by %s", p.ProposalID, p.Proposer)
+	return fmt.Sprintf("Proposal with ID %d was proposed by %s", p.ProposalID, p.Proposer)
 }
 
 // QueryDepositsByTxQuery will query for deposits via a direct txs tags query. It
@@ -42,7 +42,7 @@ func QueryDepositsByTxQuery(
 ) ([]byte, error) {
 
 	tags := []string{
-		fmt.Sprintf("%s='%s'", tags.Action, tags.ActionProposalDeposit),
+		fmt.Sprintf("%s='%s'", tags.Action, gov.MsgDeposit{}.Type()),
 		fmt.Sprintf("%s='%s'", tags.ProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
 	}
 
@@ -87,7 +87,7 @@ func QueryVotesByTxQuery(
 ) ([]byte, error) {
 
 	tags := []string{
-		fmt.Sprintf("%s='%s'", tags.Action, tags.ActionProposalVote),
+		fmt.Sprintf("%s='%s'", tags.Action, gov.MsgVote{}.Type()),
 		fmt.Sprintf("%s='%s'", tags.ProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
 	}
 
@@ -127,7 +127,7 @@ func QueryVoteByTxQuery(
 ) ([]byte, error) {
 
 	tags := []string{
-		fmt.Sprintf("%s='%s'", tags.Action, tags.ActionProposalVote),
+		fmt.Sprintf("%s='%s'", tags.Action, gov.MsgVote{}.Type()),
 		fmt.Sprintf("%s='%s'", tags.ProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
 		fmt.Sprintf("%s='%s'", tags.Voter, []byte(params.Voter.String())),
 	}
@@ -170,7 +170,7 @@ func QueryDepositByTxQuery(
 ) ([]byte, error) {
 
 	tags := []string{
-		fmt.Sprintf("%s='%s'", tags.Action, tags.ActionProposalDeposit),
+		fmt.Sprintf("%s='%s'", tags.Action, gov.MsgDeposit{}.Type()),
 		fmt.Sprintf("%s='%s'", tags.ProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
 		fmt.Sprintf("%s='%s'", tags.Depositor, []byte(params.Depositor.String())),
 	}
@@ -213,7 +213,7 @@ func QueryProposerByTxQuery(
 ) (Proposer, error) {
 
 	tags := []string{
-		fmt.Sprintf("%s='%s'", tags.Action, tags.ActionProposalSubmitted),
+		fmt.Sprintf("%s='%s'", tags.Action, gov.MsgSubmitProposal{}.Type()),
 		fmt.Sprintf("%s='%s'", tags.ProposalID, []byte(fmt.Sprintf("%d", proposalID))),
 	}
 
@@ -238,7 +238,6 @@ func QueryProposerByTxQuery(
 
 // QueryProposalByID takes a proposalID and returns a proposal
 func QueryProposalByID(proposalID uint64, cliCtx *context.CLIContext, cdc *codec.Codec, queryRoute string) ([]byte, error) {
-	// Construct query
 	params := gov.NewQueryProposalParams(proposalID)
 	bz, err := cdc.MarshalJSON(params)
 	if err != nil {

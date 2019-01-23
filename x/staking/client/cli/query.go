@@ -197,7 +197,7 @@ func GetCmdQueryValidatorDelegations(storeKey string, cdc *codec.Codec) *cobra.C
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext(cdc)
-
+      
 			validatorAddr, err := sdk.ValAddressFromBech32(args[0])
 			if err != nil {
 				return err

@@ -6,6 +6,7 @@ BREAKING CHANGES
   * [gaia-lite] [\#2182] Renamed and merged all redelegations endpoints into `/staking/redelegations`
   * [\#3176](https://github.com/cosmos/cosmos-sdk/issues/3176) `tx/sign` endpoint now expects `BaseReq` fields as nested object.
   * [\#2222] all endpoints renamed from `/stake` -> `/staking`
+  * [\#1268] `LooseTokens` -> `NotBondedTokens`
   * [\#3289] misc renames:
     * `Validator.UnbondingMinTime` -> `Validator.UnbondingCompletionTime`
     * `Delegation` -> `Value` in `MsgCreateValidator` and `MsgDelegate`
@@ -20,12 +21,14 @@ BREAKING CHANGES
   * [\#2222] `gaiacli tx stake` -> `gaiacli tx staking`, `gaiacli query stake` -> `gaiacli query staking`
   * [\#3320](https://github.com/cosmos/cosmos-sdk/pull/3320) Ensure all `gaiacli query` commands respect the `--output` and `--indent` flags
   * [\#3268](https://github.com/cosmos/cosmos-sdk/issues/3268) Unify `params` queries call
+  * [\#1894](https://github.com/cosmos/cosmos-sdk/issues/1894) `version` command now shows latest commit, vendor dir hash, and build machine info.
 
 * Gaia
   * https://github.com/cosmos/cosmos-sdk/issues/2838 - Move store keys to constants
   * [\#3162](https://github.com/cosmos/cosmos-sdk/issues/3162) The `--gas` flag now takes `auto` instead of `simulate`
     in order to trigger a simulation of the tx before the actual execution.
   * [\#3285](https://github.com/cosmos/cosmos-sdk/pull/3285) New `gaiad tendermint version` to print libs versions
+  * [\#1894](https://github.com/cosmos/cosmos-sdk/pull/1894) `version` command now shows latest commit, vendor dir hash, and build machine info.
 
 * SDK
   * [staking] \#2513 Validator power type from Dec -> Int
@@ -33,15 +36,19 @@ BREAKING CHANGES
   * [\#3064](https://github.com/cosmos/cosmos-sdk/issues/3064) Sanitize `sdk.Coin` denom. Coins denoms are now case insensitive, i.e. 100fooToken equals to 100FOOTOKEN.
   * [\#3195](https://github.com/cosmos/cosmos-sdk/issues/3195) Allows custom configuration for syncable strategy
   * [\#3242](https://github.com/cosmos/cosmos-sdk/issues/3242) Fix infinite gas
-  meter utilization during aborted ante handler executions.
-  * [\#2222] [x/staking] `/stake` -> `/staking` module rename
-  * \#3292 [x/distribution] Enable or disable withdraw addresses with a parameter in the param store
+    meter utilization during aborted ante handler executions.
+  * [x/distribution] \#3292 Enable or disable withdraw addresses with a parameter in the param store
+  * [staking] \#2222 `/stake` -> `/staking` module rename
+  * [staking] \#1268 `LooseTokens` -> `NotBondedTokens`
   * [staking] \#1402 Redelegation and unbonding-delegation structs changed to include multiple an array of entries
   * [staking] \#3289 misc renames:
     * `Validator.UnbondingMinTime` -> `Validator.UnbondingCompletionTime`
     * `Delegation` -> `Value` in `MsgCreateValidator` and `MsgDelegate`
     * `MsgBeginUnbonding` -> `MsgUndelegate`
   * [\#3315] Increase decimal precision to 18
+  * \#3333 - F1 storage efficiency improvements - automatic withdrawals when unbonded, historical reward reference counting
+  * \#3323 Update to Tendermint 0.29.0
+  * [\#3328](https://github.com/cosmos/cosmos-sdk/issues/3328) [x/gov] Remove redundant action tag
 
 * Tendermint
   * [\#3298](https://github.com/cosmos/cosmos-sdk/issues/3298) Upgrade to Tendermint 0.28.0
@@ -63,6 +70,8 @@ FEATURES
   * [\#3198](https://github.com/cosmos/cosmos-sdk/issues/3198) New `multisign` command to generate multisig signatures.
   * [\#3198](https://github.com/cosmos/cosmos-sdk/issues/3198) New `sign --multisig` flag to enable multisig mode.
   * [\#2715](https://github.com/cosmos/cosmos-sdk/issues/2715) Reintroduce gaia server's insecure mode.
+  * [\#3334](https://github.com/cosmos/cosmos-sdk/pull/3334) New `gaiad completion` and `gaiacli completion` to generate Bash/Zsh completion scripts.
+  * [\#2607](https://github.com/cosmos/cosmos-sdk/issues/2607) Make `gaiacli config` handle the boolean `indent` flag to beautify commands JSON output.
 
 * Gaia
   * [\#2182] [x/staking] Added querier for querying a single redelegation
@@ -79,6 +88,7 @@ FEATURES
   the ante handler.
   * [\#3179](https://github.com/cosmos/cosmos-sdk/pull/3179) New CodeNoSignatures error code.
   * \#3319 [x/distribution] Queriers for all distribution state worth querying; distribution query commands
+  * [\#3356](https://github.com/cosmos/cosmos-sdk/issues/3356) [x/auth] bech32-ify accounts address in error message.
 
 * Tendermint
 
@@ -111,7 +121,8 @@ IMPROVEMENTS
     slashing, and staking modules.
   * [\#3093](https://github.com/cosmos/cosmos-sdk/issues/3093) Ante handler does no longer read all accounts in one go when processing signatures as signature
     verification may fail before last signature is checked.
-  * [x/stake] \#1402 Add for multiple simultaneous redelegations or unbonding-delegations within an unbonding period
+  * [staking] \#1402 Add for multiple simultaneous redelegations or unbonding-delegations within an unbonding period
+  * [staking] \#1268 staking spec rewrite
 
 * Tendermint
 
@@ -136,6 +147,8 @@ BUG FIXES
   * \#3223 Fix unset governance proposal queues when importing state from old chain
   * [#3187](https://github.com/cosmos/cosmos-sdk/issues/3187) Fix `gaiad export`
   by resetting each validator's slashing period.
+  * [##3336](https://github.com/cosmos/cosmos-sdk/issues/3336) Ensure all SDK
+  messages have their signature bytes contain canonical fields `value` and `type`.
 
 * SDK
 

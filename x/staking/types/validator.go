@@ -288,7 +288,7 @@ func (v Validator) UpdateStatus(pool Pool, NewStatus sdk.BondStatus) (Validator,
 		case sdk.Unbonded:
 			return v, pool
 		case sdk.Bonded:
-			pool = pool.looseTokensToBonded(v.Tokens)
+			pool = pool.notBondedTokensToBonded(v.Tokens)
 		}
 	case sdk.Unbonding:
 
@@ -296,7 +296,7 @@ func (v Validator) UpdateStatus(pool Pool, NewStatus sdk.BondStatus) (Validator,
 		case sdk.Unbonding:
 			return v, pool
 		case sdk.Bonded:
-			pool = pool.looseTokensToBonded(v.Tokens)
+			pool = pool.notBondedTokensToBonded(v.Tokens)
 		}
 	case sdk.Bonded:
 
@@ -304,7 +304,7 @@ func (v Validator) UpdateStatus(pool Pool, NewStatus sdk.BondStatus) (Validator,
 		case sdk.Bonded:
 			return v, pool
 		default:
-			pool = pool.bondedTokensToLoose(v.Tokens)
+			pool = pool.bondedTokensToNotBonded(v.Tokens)
 		}
 	}
 
@@ -322,7 +322,7 @@ func (v Validator) RemoveTokens(pool Pool, tokens sdk.Int) (Validator, Pool) {
 	}
 	v.Tokens = v.Tokens.Sub(tokens)
 	if v.Status == sdk.Bonded {
-		pool = pool.bondedTokensToLoose(tokens)
+		pool = pool.bondedTokensToNotBonded(tokens)
 	}
 	return v, pool
 }
@@ -350,7 +350,7 @@ func (v Validator) AddTokensFromDel(pool Pool, amount sdk.Int) (Validator, Pool,
 	}
 
 	if v.Status == sdk.Bonded {
-		pool = pool.looseTokensToBonded(amount)
+		pool = pool.notBondedTokensToBonded(amount)
 	}
 
 	v.Tokens = v.Tokens.Add(amount)
@@ -385,7 +385,7 @@ func (v Validator) RemoveDelShares(pool Pool, delShares sdk.Dec) (Validator, Poo
 
 	v.DelegatorShares = remainingShares
 	if v.Status == sdk.Bonded {
-		pool = pool.bondedTokensToLoose(issuedTokens)
+		pool = pool.bondedTokensToNotBonded(issuedTokens)
 	}
 
 	return v, pool, issuedTokens
