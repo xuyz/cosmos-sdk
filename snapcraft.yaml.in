@@ -6,15 +6,15 @@ description: |
   This snap provides the Gaia daemon gaiad and the command line
   tool gaiacli.
 grade: devel # must be 'stable' to release into candidate/stable channels
-confinement: devmode # use 'strict' once you have the right plugs and slots
+confinement: strict # use 'strict' once you have the right plugs and slots
 
 apps:
     gaiad:
         command: bin/gaiad
-        plugs: [home]
+        plugs: [home,network,network-bind]
     gaiacli:
         command: bin/gaiacli
-        plugs: [home]
+        plugs: [home,network,network-bind]
 
 parts:
   gaia:
@@ -42,7 +42,8 @@ parts:
         export GOPATH=`pwd`/go
         echo $GOPATH
         cd go/src/github.com/cosmos/cosmos-sdk
-        make get_vendor_deps
+        make tools
+        make vendor-deps
         make install
         mkdir $SNAPCRAFT_PART_INSTALL/bin
         cp $GOPATH/bin/gaiad $SNAPCRAFT_PART_INSTALL/bin
